@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forecast Operator Console</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: #0f1118;
+      color: #f4f7ff;
+      padding: 24px;
+    }
+
+    .card {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #181d28;
+      border: 1px solid #2c3342;
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+
+    h1 { margin-top: 0; }
+    .hidden { display: none; }
+    label { display:block; margin: 10px 0 4px; }
+    input, select, button {
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: 1px solid #3b455a;
+      background: #121722;
+      color: #f4f7ff;
+    }
+    button { cursor:pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom: 1px solid #2b3445; padding: 8px; text-align: left; }
+    .row-actions { display:flex; gap:8px; }
+    .note { color:#aab7d5; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <section class="card" id="loginCard">
+    <h1>Operator Login</h1>
+    <p class="note">Demo credentials: <strong>operator</strong> / <strong>forecast123</strong>.</p>
+    <label for="username">Username</label>
+    <input id="username" />
+    <label for="password">Password</label>
+    <input id="password" type="password" />
+    <div style="margin-top:12px;">
+      <button id="loginBtn">Login</button>
+      <span id="loginMsg" class="note"></span>
+    </div>
+  </section>
+
+  <section class="card hidden" id="editorCard">
+    <h1>Forecast Editor</h1>
+    <p class="note">Changes are saved to <code>localStorage</code> and used by <code>index.html</code> during refresh.</p>
+    <table>
+      <thead>
+        <tr><th>Server</th><th>Multiplier</th><th>Category</th><th></th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div style="margin-top:12px" class="row-actions">
+      <button id="addRowBtn">Add Row</button>
+      <button id="saveBtn">Save</button>
+      <button id="clearBtn">Reset to Defaults</button>
+    </div>
+    <p id="saveMsg" class="note"></p>
+  </section>
+
+  <script>
+    const STORAGE_KEY = "forecastData";
+    const defaultData = [
+      { server: "2B61B1", multiplier: "1.18x", category: "normal" },
+      { server: "DD616C", multiplier: "1.17x", category: "old" },
+      { server: "FB81A4", multiplier: "1.17x", category: "unstable" },
+      { server: "457091", multiplier: "1.16x", category: "normal" },
+      { server: "CBCABF", multiplier: "1.16x", category: "old" }
+    ];
+
+    function normalizeCategory(category) {
+      if (category === "old" || category === "unstable") return category;
+      return "normal";
+    }
+
+    function getData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : defaultData;
+        return Array.isArray(parsed) ? parsed : defaultData;
+      } catch {
+        return defaultData;
+      }
+    }
+
+    function setData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function createRow(entry = { server: "", multiplier: "1.00x", category: "normal" }) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input class="server" value="${entry.server}" /></td>
+        <td><input class="multiplier" value="${entry.multiplier}" /></td>
+        <td>
+          <select class="category">
+            <option value="normal">normal</option>
+            <option value="old">old</option>
+            <option value="unstable">unstable</option>
+          </select>
+        </td>
+        <td><button class="removeBtn">Remove</button></td>
+      `;
+      tr.querySelector('.category').value = normalizeCategory(entry.category);
+      tr.querySelector('.removeBtn').addEventListener('click', () => tr.remove());
+      return tr;
+    }
+
+    function renderRows(data) {
+      const tbody = document.getElementById("rows");
+      tbody.innerHTML = "";
+      data.forEach((entry) => tbody.appendChild(createRow(entry)));
+    }
+
+    function collectRows() {
+      return [...document.querySelectorAll('#rows tr')].map((tr) => ({
+        server: tr.querySelector('.server').value.trim().toUpperCase(),
+        multiplier: tr.querySelector('.multiplier').value.trim().toUpperCase(),
+        category: normalizeCategory(tr.querySelector('.category').value)
+      })).filter((row) => row.server || row.multiplier);
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user === "operator" && pass === "forecast123") {
+        document.getElementById("loginCard").classList.add("hidden");
+        document.getElementById("editorCard").classList.remove("hidden");
+        renderRows(getData());
+      } else {
+        document.getElementById("loginMsg").textContent = "Invalid credentials.";
+      }
+    });
+
+    document.getElementById("addRowBtn").addEventListener("click", () => {
+      document.getElementById("rows").appendChild(createRow());
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const data = collectRows();
+      setData(data);
+      document.getElementById("saveMsg").textContent = "Saved. The board page will pick this up on next refresh cycle.";
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      renderRows(defaultData);
+      document.getElementById("saveMsg").textContent = "Reset to defaults (not yet saved).";
+    });
+  </script>
+</body>
+</html>
