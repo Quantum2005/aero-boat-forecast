@@ -1,108 +1,360 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Aeronautica Nautical Forecast</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aero Boat Forecast — Split Flap</title>
+  <style>
+    :root {
+      --wood-dark: #4f301c;
+      --wood-light: #7a4c2e;
+      --tile: #171a21;
+      --tile-top: #232733;
+      --text: #eef2f8;
+    }
 
-<style>
-body {
-    background: #111;
-    color: #fff;
-    font-family: monospace;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px;
-}
+    * { box-sizing: border-box; }
 
-h1 {
-    margin-bottom: 30px;
-    letter-spacing: 3px;
-}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      font-family: "Inter", Arial, sans-serif;
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.2)),
+        repeating-linear-gradient(90deg, var(--wood-dark) 0 18px, var(--wood-light) 18px 36px);
+    }
 
-table {
-    border-collapse: collapse;
-    width: 500px;
-}
+    .shell {
+      width: min(1180px, 96vw);
+      background: linear-gradient(#1e2129, #12141b);
+      border: 10px solid #05070d;
+      border-radius: 8px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.03);
+      padding: 16px;
+    }
 
-th, td {
-    padding: 15px;
-    text-align: center;
-}
+    .title-board {
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+    }
 
-th {
-    border-bottom: 2px solid #444;
-    font-size: 18px;
-}
+    .rows { display: grid; gap: 8px; }
 
-.flip {
-    position: relative;
-    background: #000;
-    border: 1px solid #333;
-    height: 50px;
-    overflow: hidden;
-}
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
 
-.flip span {
-    display: block;
-    animation: flipAnim 0.6s ease-in-out;
-    font-size: 20px;
-    line-height: 50px;
-}
+    .tile {
+      position: relative;
+      width: min(3.2vw, 42px);
+      aspect-ratio: 1 / 1.28;
+      border: 1px solid #242a35;
+      border-radius: 3px;
+      overflow: hidden;
+      background: linear-gradient(var(--tile-top), var(--tile));
+      box-shadow: inset 0 -10px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      isolation: isolate;
+      perspective: 400px;
+    }
 
-@keyframes flipAnim {
-    0%   { transform: rotateX(90deg); opacity: 0; }
-    50%  { transform: rotateX(-20deg); }
-    100% { transform: rotateX(0deg); opacity: 1; }
-}
-</style>
+    .tile::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.7);
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .glyph-layer {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      font-size: clamp(20px, 2.1vw, 34px);
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .glyph-top,
+    .glyph-next-top { clip-path: inset(0 0 50% 0); }
+
+    .glyph-bottom,
+    .glyph-next-bottom { clip-path: inset(50% 0 0 0); }
+
+    .glyph-next-top,
+    .glyph-next-bottom {
+      opacity: 0;
+      z-index: 3;
+    }
+
+    .tile.space .glyph-layer { color: transparent; }
+
+    .flap-top,
+    .flap-bottom {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      z-index: 6;
+      background: linear-gradient(rgba(36, 42, 56, 0.5), rgba(15, 19, 28, 0.5));
+      pointer-events: none;
+      backface-visibility: hidden;
+    }
+
+    .flap-top { top: 0; transform-origin: bottom; }
+    .flap-bottom { bottom: 0; transform-origin: top; transform: rotateX(90deg); }
+
+    .tile.flipping .flap-top { animation: topFlip 200ms ease-in forwards; }
+    .tile.flipping .flap-bottom { animation: bottomFlip 200ms ease-out 200ms forwards; }
+    .tile.flipping .glyph-next-top,
+    .tile.flipping .glyph-next-bottom { opacity: 1; }
+
+    .header-row { margin-bottom: 8px; }
+
+    .separator {
+      width: min(2vw, 24px);
+      text-align: center;
+      color: #a9b4c8;
+      font-weight: 700;
+      font-size: clamp(15px, 1.4vw, 22px);
+    }
+
+    @keyframes topFlip {
+      from { transform: rotateX(0deg); background: linear-gradient(rgba(36, 42, 56, 0.5), rgba(15, 19, 28, 0.5)); }
+      to { transform: rotateX(-90deg); background: linear-gradient(rgba(36, 42, 56, 0.92), rgba(15, 19, 28, 0.92)); }
+    }
+
+    @keyframes bottomFlip {
+      from { transform: rotateX(90deg); background: linear-gradient(rgba(36, 42, 56, 0.92), rgba(15, 19, 28, 0.92)); }
+      to { transform: rotateX(0deg); background: linear-gradient(rgba(36, 42, 56, 0.5), rgba(15, 19, 28, 0.5)); }
+    }
+
+    @media (max-width: 900px) {
+      .tile { width: min(4.2vw, 34px); }
+    }
+  </style>
 </head>
-
 <body>
+  <main class="shell">
+    <section class="title-board">
+      <div class="row" id="titleRow"></div>
+    </section>
 
-<h1>DAILY FORECAST</h1>
+    <section class="rows">
+      <div class="row header-row" id="headerRow"></div>
+      <div class="row" id="dividerRow"></div>
+      <div class="rows" id="dataRows"></div>
+    </section>
+  </main>
 
-<table>
-    <thead>
-        <tr>
-            <th>Server ID</th>
-            <th>Multiplier</th>
-        </tr>
-    </thead>
-    <tbody id="forecastTable">
-    </tbody>
-</table>
+  <script>
+    const SERVER_WIDTH = 10;
+    const MULTIPLIER_WIDTH = 8;
+    const TITLE_TEXT = "DAILY FORECAST";
 
-<script>
-// 👇 MANUALLY EDIT YOUR DATA HERE
-const forecastData = [
-    { server: "2B61B1", multiplier: "1.18x" },
-    { server: "EU-07", multiplier: "1.8x" },
-    { server: "AS-12", multiplier: "3.1x" }
-];
+    let forecastData = [
+      { server: "2B61B1", multiplier: "1.18x" },
+      { server: "EU-07", multiplier: "1.80x" },
+      { server: "AS-12", multiplier: "3.10x" }
+    ];
 
-// Render table
-function renderTable() {
-    const table = document.getElementById("forecastTable");
-    table.innerHTML = "";
+    let lastSnapshot = JSON.stringify(forecastData);
 
-    forecastData.forEach(entry => {
-        const row = document.createElement("tr");
+    function normalize(text, width) {
+      return String(text).toUpperCase().slice(0, width).padEnd(width, " ");
+    }
 
-        const serverCell = document.createElement("td");
-        serverCell.innerHTML = `<div class="flip"><span>${entry.server}</span></div>`;
+    function createGlyph(className, char) {
+      const glyph = document.createElement("div");
+      glyph.className = `glyph-layer ${className}`;
+      glyph.textContent = char;
+      return glyph;
+    }
 
-        const multiplierCell = document.createElement("td");
-        multiplierCell.innerHTML = `<div class="flip"><span>${entry.multiplier}</span></div>`;
+    function createTile(char) {
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      if (char === " ") tile.classList.add("space");
 
-        row.appendChild(serverCell);
-        row.appendChild(multiplierCell);
-        table.appendChild(row);
-    });
-}
+      const glyphTop = createGlyph("glyph-top", char);
+      const glyphBottom = createGlyph("glyph-bottom", char);
+      const glyphNextTop = createGlyph("glyph-next-top", char);
+      const glyphNextBottom = createGlyph("glyph-next-bottom", char);
 
-renderTable();
-</script>
+      const flapTop = document.createElement("div");
+      flapTop.className = "flap-top";
 
+      const flapBottom = document.createElement("div");
+      flapBottom.className = "flap-bottom";
+
+      tile.append(glyphTop, glyphBottom, glyphNextTop, glyphNextBottom, flapTop, flapBottom);
+
+      return {
+        tile,
+        glyphTop,
+        glyphBottom,
+        glyphNextTop,
+        glyphNextBottom,
+        char,
+        queue: Promise.resolve()
+      };
+    }
+
+    function buildStaticRow(container, text) {
+      [...text].forEach((char) => container.appendChild(createTile(char).tile));
+    }
+
+    function buildHeader() {
+      const headerRow = document.getElementById("headerRow");
+      buildStaticRow(headerRow, normalize("SERVER ID", SERVER_WIDTH));
+
+      const sep = document.createElement("div");
+      sep.className = "separator";
+      sep.textContent = "|";
+      headerRow.appendChild(sep);
+
+      buildStaticRow(headerRow, normalize("MULTIPLIER", MULTIPLIER_WIDTH));
+
+      const dividerRow = document.getElementById("dividerRow");
+      const dividerText = `${"-".repeat(SERVER_WIDTH)}|${"-".repeat(MULTIPLIER_WIDTH)}`;
+      [...dividerText].forEach((char) => {
+        if (char === "|") {
+          const s = document.createElement("div");
+          s.className = "separator";
+          s.textContent = "|";
+          dividerRow.appendChild(s);
+        } else {
+          dividerRow.appendChild(createTile(char).tile);
+        }
+      });
+    }
+
+    function buildTitle() {
+      const titleRow = document.getElementById("titleRow");
+      buildStaticRow(titleRow, normalize(TITLE_TEXT, SERVER_WIDTH + MULTIPLIER_WIDTH + 3));
+    }
+
+    const rowTiles = [];
+
+    function buildDataRows(data) {
+      const dataRows = document.getElementById("dataRows");
+      dataRows.innerHTML = "";
+      rowTiles.length = 0;
+
+      data.forEach((entry) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const serverTiles = [];
+        [...normalize(entry.server, SERVER_WIDTH)].forEach((char) => {
+          const tileObj = createTile(char);
+          serverTiles.push(tileObj);
+          row.appendChild(tileObj.tile);
+        });
+
+        const sep = document.createElement("div");
+        sep.className = "separator";
+        sep.textContent = "|";
+        row.appendChild(sep);
+
+        const multTiles = [];
+        [...normalize(entry.multiplier, MULTIPLIER_WIDTH)].forEach((char) => {
+          const tileObj = createTile(char);
+          multTiles.push(tileObj);
+          row.appendChild(tileObj.tile);
+        });
+
+        rowTiles.push({ serverTiles, multTiles });
+        dataRows.appendChild(row);
+      });
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function flipOnce(tileObj, targetChar) {
+      tileObj.glyphNextTop.textContent = targetChar;
+      tileObj.glyphNextBottom.textContent = targetChar;
+      tileObj.tile.classList.add("flipping");
+
+      await wait(420);
+
+      tileObj.glyphTop.textContent = targetChar;
+      tileObj.glyphBottom.textContent = targetChar;
+      tileObj.char = targetChar;
+      tileObj.tile.classList.toggle("space", targetChar === " ");
+      tileObj.tile.classList.remove("flipping");
+    }
+
+    function enqueueFlipTo(tileObj, targetChar, delay = 0) {
+      tileObj.queue = tileObj.queue.then(async () => {
+        if (tileObj.char === targetChar) return;
+        await wait(delay);
+        await flipOnce(tileObj, targetChar);
+      });
+      return tileObj.queue;
+    }
+
+    function animateToData(data) {
+      const tasks = [];
+      data.forEach((entry, rowIndex) => {
+        const server = normalize(entry.server, SERVER_WIDTH);
+        const multiplier = normalize(entry.multiplier, MULTIPLIER_WIDTH);
+
+        [...server].forEach((char, i) => {
+          tasks.push(enqueueFlipTo(rowTiles[rowIndex].serverTiles[i], char, i * 24));
+        });
+
+        [...multiplier].forEach((char, i) => {
+          tasks.push(enqueueFlipTo(rowTiles[rowIndex].multTiles[i], char, i * 24 + 90));
+        });
+      });
+
+      return Promise.all(tasks);
+    }
+
+    function fetchForecastData() {
+      if (typeof window.getForecastData === "function") {
+        const result = window.getForecastData();
+        if (Array.isArray(result)) return result;
+      }
+      return forecastData;
+    }
+
+    async function refreshBoard() {
+      const latest = fetchForecastData();
+      const snapshot = JSON.stringify(latest);
+      if (snapshot === lastSnapshot) return;
+
+      if (latest.length !== rowTiles.length) {
+        buildDataRows(latest);
+      }
+
+      await animateToData(latest);
+      forecastData = latest;
+      lastSnapshot = snapshot;
+    }
+
+    buildTitle();
+    buildHeader();
+    buildDataRows(forecastData);
+
+    window.refreshBoard = refreshBoard;
+    setInterval(refreshBoard, 30000);
+  </script>
 </body>
 </html>
