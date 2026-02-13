@@ -12,6 +12,12 @@
       --tile-top: #232733;
       --text: #f9fcff;
       --text-old: #ff5a5a;
+      --text-unstable: #ffd84d;
+      --tile-w: min(2.9vw, 38px);
+      --tile-gap: 4px;
+      --seg-sep: min(2vw, 24px);
+      --server-count: 10;
+      --mult-count: 8;
     }
 
     * { box-sizing: border-box; }
@@ -63,22 +69,29 @@
     }
 
     .header-box {
-      justify-content: flex-start;
       font-size: clamp(19px, 1.9vw, 28px);
-      padding: 12px 14px;
+      padding: 12px 0;
       margin-bottom: 10px;
-      gap: 14px;
+      display: grid;
+      grid-template-columns:
+        calc((var(--server-count) * var(--tile-w)) + ((var(--server-count) - 1) * var(--tile-gap)))
+        var(--seg-sep)
+        calc((var(--mult-count) * var(--tile-w)) + ((var(--mult-count) - 1) * var(--tile-gap)));
+      justify-content: start;
+      align-items: center;
+      column-gap: var(--tile-gap);
     }
 
-    .header-left { width: calc((10 * min(2.9vw, 38px)) + (9 * 4px)); }
-    .header-sep { width: min(2vw, 24px); text-align: center; color: #d4deef; }
+    .header-box span { text-align: center; }
+    .header-box .header-left { text-align: center; }
+    .header-box .header-right { text-align: center; }
 
     .rows { display: grid; gap: 8px; }
-    .row { display: flex; align-items: center; gap: 4px; }
+    .row { display: flex; align-items: center; gap: var(--tile-gap); }
 
     .tile {
       position: relative;
-      width: min(2.9vw, 38px);
+      width: var(--tile-w);
       aspect-ratio: 1 / 1.28;
       border: 1px solid #242a35;
       border-radius: 3px;
@@ -107,7 +120,7 @@
       display: grid;
       place-items: center;
       color: var(--text);
-      font-size: clamp(24px, 2.45vw, 40px);
+      font-size: clamp(25px, 2.6vw, 42px);
       font-weight: 800;
       line-height: 1;
       text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
@@ -117,7 +130,12 @@
 
     .tile.old .glyph-layer {
       color: var(--text-old);
-      text-shadow: 0 0 10px rgba(255, 60, 60, 0.15), 0 1px 1px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 0 10px rgba(255, 60, 60, 0.2), 0 1px 1px rgba(0, 0, 0, 0.9);
+    }
+
+    .tile.unstable .glyph-layer {
+      color: var(--text-unstable);
+      text-shadow: 0 0 10px rgba(255, 223, 92, 0.22), 0 1px 1px rgba(0, 0, 0, 0.9);
     }
 
     .glyph-top,
@@ -149,13 +167,13 @@
     .flap-top { top: 0; transform-origin: bottom; }
     .flap-bottom { bottom: 0; transform-origin: top; transform: rotateX(90deg); }
 
-    .tile.flipping .flap-top { animation: topFlip 200ms ease-in forwards; }
-    .tile.flipping .flap-bottom { animation: bottomFlip 200ms ease-out 200ms forwards; }
+    .tile.flipping .flap-top { animation: topFlip 140ms ease-in forwards; }
+    .tile.flipping .flap-bottom { animation: bottomFlip 140ms ease-out 140ms forwards; }
     .tile.flipping .glyph-next-top,
     .tile.flipping .glyph-next-bottom { opacity: 1; }
 
     .separator {
-      width: min(2vw, 24px);
+      width: var(--seg-sep);
       text-align: center;
       color: #d4deef;
       font-weight: 800;
@@ -173,8 +191,7 @@
     }
 
     @media (max-width: 900px) {
-      .tile { width: min(4vw, 34px); }
-      .header-left { width: calc((10 * min(4vw, 34px)) + (9 * 4px)); }
+      :root { --tile-w: min(4vw, 34px); }
     }
   </style>
 </head>
@@ -184,8 +201,8 @@
       <section class="solid-box title-box">Daily Forecast</section>
       <section class="solid-box header-box">
         <span class="header-left">Server ID</span>
-        <span class="header-sep">|</span>
-        <span>Multiplier</span>
+        <span>|</span>
+        <span class="header-right">Multiplier</span>
       </section>
       <section class="rows" id="dataRows"></section>
     </main>
@@ -194,16 +211,49 @@
   <script>
     const SERVER_WIDTH = 10;
     const MULTIPLIER_WIDTH = 8;
+    const ALPHABET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-X";
+    const CATEGORY_ORDER = ["normal", "old", "unstable"];
 
     let forecastData = [
-      { server: "2B61B1", multiplier: "1.18x", old: false },
-      { server: "DD616C", multiplier: "1.17x", old: true },
-      { server: "FB81A4", multiplier: "1.17x", old: false },
-      { server: "457091", multiplier: "1.16x", old: false },
-      { server: "CBCABF", multiplier: "1.16x", old: true }
+      { server: "2B61B1", multiplier: "1.18x", category: "normal" },
+      { server: "DD616C", multiplier: "1.17x", category: "old" },
+      { server: "FB81A4", multiplier: "1.17x", category: "unstable" },
+      { server: "457091", multiplier: "1.16x", category: "normal" },
+      { server: "CBCABF", multiplier: "1.16x", category: "old" }
     ];
 
     let lastSnapshot = JSON.stringify(forecastData);
+
+    function getStoredForecastData() {
+      try {
+        const raw = localStorage.getItem("forecastData");
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+
+    function normalizeCategory(value) {
+      if (value === "old" || value === "unstable") return value;
+      return "normal";
+    }
+
+    function normalizeEntry(entry) {
+      return {
+        server: String(entry.server ?? ""),
+        multiplier: String(entry.multiplier ?? ""),
+        category: normalizeCategory(entry.category)
+      };
+    }
+
+    const storedData = getStoredForecastData();
+    if (storedData) {
+      forecastData = storedData.map(normalizeEntry);
+      lastSnapshot = JSON.stringify(forecastData);
+    }
 
     function normalize(text, width) {
       return String(text).toUpperCase().slice(0, width).padEnd(width, " ");
@@ -216,11 +266,17 @@
       return glyph;
     }
 
-    function createTile(char, isOld) {
+    function applyCategoryClass(tile, category) {
+      tile.classList.remove("old", "unstable");
+      if (category === "old") tile.classList.add("old");
+      if (category === "unstable") tile.classList.add("unstable");
+    }
+
+    function createTile(char, category) {
       const tile = document.createElement("div");
       tile.className = "tile";
       if (char === " ") tile.classList.add("space");
-      if (isOld) tile.classList.add("old");
+      applyCategoryClass(tile, category);
 
       const glyphTop = createGlyph("glyph-top", char);
       const glyphBottom = createGlyph("glyph-bottom", char);
@@ -242,7 +298,7 @@
         glyphNextTop,
         glyphNextBottom,
         char,
-        old: Boolean(isOld),
+        category,
         queue: Promise.resolve()
       };
     }
@@ -254,13 +310,14 @@
       dataRows.innerHTML = "";
       rowTiles.length = 0;
 
-      data.forEach((entry) => {
+      data.forEach((entryRaw) => {
+        const entry = normalizeEntry(entryRaw);
         const row = document.createElement("div");
         row.className = "row";
 
         const serverTiles = [];
         [...normalize(entry.server, SERVER_WIDTH)].forEach((char) => {
-          const tileObj = createTile(char, entry.old);
+          const tileObj = createTile(char, entry.category);
           serverTiles.push(tileObj);
           row.appendChild(tileObj.tile);
         });
@@ -272,12 +329,12 @@
 
         const multTiles = [];
         [...normalize(entry.multiplier, MULTIPLIER_WIDTH)].forEach((char) => {
-          const tileObj = createTile(char, entry.old);
+          const tileObj = createTile(char, entry.category);
           multTiles.push(tileObj);
           row.appendChild(tileObj.tile);
         });
 
-        rowTiles.push({ serverTiles, multTiles, old: Boolean(entry.old) });
+        rowTiles.push({ serverTiles, multTiles, category: entry.category });
         dataRows.appendChild(row);
       });
     }
@@ -286,81 +343,126 @@
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    async function flipOnce(tileObj, targetChar, targetOld) {
+    async function flipOnce(tileObj, targetChar, targetCategory) {
       tileObj.glyphNextTop.textContent = targetChar;
       tileObj.glyphNextBottom.textContent = targetChar;
-      tileObj.tile.classList.toggle("old", targetOld);
+      applyCategoryClass(tileObj.tile, targetCategory);
       tileObj.tile.classList.add("flipping");
 
-      await wait(420);
+      await wait(300);
 
       tileObj.glyphTop.textContent = targetChar;
       tileObj.glyphBottom.textContent = targetChar;
       tileObj.char = targetChar;
-      tileObj.old = targetOld;
+      tileObj.category = targetCategory;
       tileObj.tile.classList.toggle("space", targetChar === " ");
-      tileObj.tile.classList.toggle("old", targetOld);
+      applyCategoryClass(tileObj.tile, targetCategory);
       tileObj.tile.classList.remove("flipping");
     }
 
-    function enqueueFlipTo(tileObj, targetChar, targetOld, delay = 0, force = false) {
+    function enqueueFlipTo(tileObj, targetChar, targetCategory, delay = 0, force = false) {
       tileObj.queue = tileObj.queue.then(async () => {
         const sameChar = tileObj.char === targetChar;
-        const sameOld = tileObj.old === targetOld;
-        if (!force && sameChar && sameOld) return;
+        const sameCategory = tileObj.category === targetCategory;
+        if (!force && sameChar && sameCategory) return;
         await wait(delay);
-        await flipOnce(tileObj, targetChar, targetOld);
+        await flipOnce(tileObj, targetChar, targetCategory);
       });
       return tileObj.queue;
     }
 
     function animateToData(data) {
       const tasks = [];
-      data.forEach((entry, rowIndex) => {
+      data.forEach((entryRaw, rowIndex) => {
+        const entry = normalizeEntry(entryRaw);
         const server = normalize(entry.server, SERVER_WIDTH);
         const multiplier = normalize(entry.multiplier, MULTIPLIER_WIDTH);
-        const targetOld = Boolean(entry.old);
-        const oldChanged = rowTiles[rowIndex].old !== targetOld;
+        const categoryChanged = rowTiles[rowIndex].category !== entry.category;
 
         [...server].forEach((char, i) => {
-          tasks.push(enqueueFlipTo(rowTiles[rowIndex].serverTiles[i], char, targetOld, i * 24, oldChanged));
+          tasks.push(enqueueFlipTo(rowTiles[rowIndex].serverTiles[i], char, entry.category, i * 24, categoryChanged));
         });
 
         [...multiplier].forEach((char, i) => {
-          tasks.push(enqueueFlipTo(rowTiles[rowIndex].multTiles[i], char, targetOld, i * 24 + 90, oldChanged));
+          tasks.push(enqueueFlipTo(rowTiles[rowIndex].multTiles[i], char, entry.category, i * 24 + 90, categoryChanged));
         });
 
-        rowTiles[rowIndex].old = targetOld;
+        rowTiles[rowIndex].category = entry.category;
       });
 
       return Promise.all(tasks);
     }
 
+    function randomChar() {
+      return ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    }
+
+    function randomCategory() {
+      return CATEGORY_ORDER[Math.floor(Math.random() * CATEGORY_ORDER.length)];
+    }
+
+    async function runShuffleAnimation(targetData) {
+      const phases = 3;
+      const tasks = [];
+
+      targetData.forEach((entryRaw, rowIndex) => {
+        const entry = normalizeEntry(entryRaw);
+        const server = normalize(entry.server, SERVER_WIDTH);
+        const multiplier = normalize(entry.multiplier, MULTIPLIER_WIDTH);
+
+        [...server].forEach((char, i) => {
+          const tile = rowTiles[rowIndex].serverTiles[i];
+          for (let phase = 0; phase < phases; phase += 1) {
+            tasks.push(enqueueFlipTo(tile, randomChar(), randomCategory(), phase * 80 + i * 10, true));
+          }
+          tasks.push(enqueueFlipTo(tile, char, entry.category, phases * 80 + i * 10, true));
+        });
+
+        [...multiplier].forEach((char, i) => {
+          const tile = rowTiles[rowIndex].multTiles[i];
+          for (let phase = 0; phase < phases; phase += 1) {
+            tasks.push(enqueueFlipTo(tile, randomChar(), randomCategory(), phase * 80 + i * 10 + 70, true));
+          }
+          tasks.push(enqueueFlipTo(tile, char, entry.category, phases * 80 + i * 10 + 70, true));
+        });
+      });
+
+      await Promise.all(tasks);
+    }
+
     function fetchForecastData() {
       if (typeof window.getForecastData === "function") {
         const result = window.getForecastData();
-        if (Array.isArray(result)) return result;
+        if (Array.isArray(result)) return result.map(normalizeEntry);
       }
-      return forecastData;
+
+      const stored = getStoredForecastData();
+      if (stored) return stored.map(normalizeEntry);
+
+      return forecastData.map(normalizeEntry);
     }
 
-    async function refreshBoard() {
+    async function refreshBoard({ withShuffle = false } = {}) {
       const latest = fetchForecastData();
       const snapshot = JSON.stringify(latest);
-      if (snapshot === lastSnapshot) return;
 
       if (latest.length !== rowTiles.length) {
         buildDataRows(latest);
       }
 
-      await animateToData(latest);
+      if (withShuffle) {
+        await runShuffleAnimation(latest);
+      } else if (snapshot !== lastSnapshot) {
+        await animateToData(latest);
+      }
+
       forecastData = latest;
       lastSnapshot = snapshot;
     }
 
     buildDataRows(forecastData);
     window.refreshBoard = refreshBoard;
-    setInterval(refreshBoard, 30000);
+    setInterval(() => refreshBoard({ withShuffle: true }), 30000);
   </script>
 </body>
 </html>
