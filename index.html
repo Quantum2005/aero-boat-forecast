@@ -161,6 +161,7 @@
   </main>
 
   <script>
+    const STORAGE_KEY = "forecastData";
     const SERVER_WIDTH = 9;
     const MULTIPLIER_WIDTH = 10;
     const TITLE_TEXT = "DAILY FORECAST";
@@ -335,6 +336,31 @@
       return Promise.all(tasks);
     }
 
+    function sanitizeForecastData(rawData) {
+      if (!Array.isArray(rawData)) return null;
+
+      const sanitized = rawData
+        .map((entry) => ({
+          server: typeof entry?.server === "string" ? entry.server : "",
+          multiplier: typeof entry?.multiplier === "string" ? entry.multiplier : ""
+        }))
+        .filter((entry) => entry.server || entry.multiplier);
+
+      return sanitized.length ? sanitized : null;
+    }
+
+    function getForecastData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return forecastData;
+
+        const parsed = JSON.parse(raw);
+        return sanitizeForecastData(parsed) ?? forecastData;
+      } catch {
+        return forecastData;
+      }
+    }
+
     function fetchForecastData() {
       if (typeof window.getForecastData === "function") {
         const result = window.getForecastData();
@@ -359,8 +385,11 @@
 
     buildTitle();
     buildHeader();
+    forecastData = getForecastData();
+    lastSnapshot = JSON.stringify(forecastData);
     buildDataRows(forecastData);
 
+    window.getForecastData = getForecastData;
     window.refreshBoard = refreshBoard;
     setInterval(refreshBoard, 30000);
   </script>
