@@ -10,8 +10,7 @@
       --wood-light: #7a4c2e;
       --tile: #171a21;
       --tile-top: #232733;
-      --text: #f8fbff;
-      --text-old: #ff5252;
+      --text: #eef2f8;
     }
 
     * { box-sizing: border-box; }
@@ -28,47 +27,19 @@
         repeating-linear-gradient(90deg, var(--wood-dark) 0 18px, var(--wood-light) 18px 36px);
     }
 
-    .zoom-wrap {
-      transform: scale(0.9);
-      transform-origin: center;
-    }
-
     .shell {
-      width: min(1260px, 96vw);
+      width: min(1180px, 96vw);
       background: linear-gradient(#1e2129, #12141b);
-      border: 12px solid #05070d;
+      border: 10px solid #05070d;
       border-radius: 8px;
       box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.03);
-      padding: 20px;
+      padding: 16px;
     }
 
-    .title-stack {
-      display: grid;
-      gap: 10px;
+    .title-board {
       margin-bottom: 14px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.08);
       padding-bottom: 12px;
-    }
-
-    .solid-box {
-      background: linear-gradient(#2a3040, #1b1f2a);
-      border: 1px solid #343d53;
-      border-radius: 6px;
-      color: #f6faff;
-      font-weight: 800;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      text-align: center;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
-      padding: 12px 16px;
-    }
-
-    .solid-box.title {
-      font-size: clamp(28px, 2.4vw, 42px);
-    }
-
-    .solid-box.columns {
-      font-size: clamp(20px, 1.75vw, 30px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.08);
     }
 
     .rows { display: grid; gap: 8px; }
@@ -81,15 +52,15 @@
 
     .tile {
       position: relative;
-      width: min(3.15vw, 44px);
-      aspect-ratio: 1 / 1.26;
-      border: 1px solid #2f3748;
+      width: min(3.2vw, 42px);
+      aspect-ratio: 1 / 1.28;
+      border: 1px solid #242a35;
       border-radius: 3px;
       overflow: hidden;
       background: linear-gradient(var(--tile-top), var(--tile));
-      box-shadow: inset 0 -10px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      box-shadow: inset 0 -10px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
       isolation: isolate;
-      perspective: 450px;
+      perspective: 400px;
     }
 
     .tile::before {
@@ -98,8 +69,8 @@
       top: 50%;
       left: 0;
       right: 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.25);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.74);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.7);
       z-index: 8;
       pointer-events: none;
     }
@@ -110,12 +81,11 @@
       display: grid;
       place-items: center;
       color: var(--text);
-      font-size: clamp(26px, 2.35vw, 39px);
-      font-weight: 800;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.88);
+      font-size: clamp(20px, 2.1vw, 34px);
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
       pointer-events: none;
       z-index: 2;
-      transition: color 220ms ease;
     }
 
     .glyph-top,
@@ -132,11 +102,6 @@
 
     .tile.space .glyph-layer { color: transparent; }
 
-    .tile.old .glyph-layer {
-      color: var(--text-old);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 7px rgba(255, 82, 82, 0.45);
-    }
-
     .flap-top,
     .flap-bottom {
       position: absolute;
@@ -144,7 +109,7 @@
       width: 100%;
       height: 50%;
       z-index: 6;
-      background: linear-gradient(rgba(36, 42, 56, 0.46), rgba(15, 19, 28, 0.46));
+      background: linear-gradient(rgba(36, 42, 56, 0.5), rgba(15, 19, 28, 0.5));
       pointer-events: none;
       backface-visibility: hidden;
     }
@@ -157,70 +122,67 @@
     .tile.flipping .glyph-next-top,
     .tile.flipping .glyph-next-bottom { opacity: 1; }
 
+    .header-row { margin-bottom: 8px; }
+
     .separator {
-      width: min(2vw, 28px);
+      width: min(2vw, 24px);
       text-align: center;
-      color: #dce7ff;
-      font-weight: 800;
-      font-size: clamp(22px, 2vw, 32px);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-      line-height: 1;
+      color: #a9b4c8;
+      font-weight: 700;
+      font-size: clamp(15px, 1.4vw, 22px);
     }
 
     @keyframes topFlip {
-      from { transform: rotateX(0deg); background: linear-gradient(rgba(36, 42, 56, 0.46), rgba(15, 19, 28, 0.46)); }
+      from { transform: rotateX(0deg); background: linear-gradient(rgba(36, 42, 56, 0.5), rgba(15, 19, 28, 0.5)); }
       to { transform: rotateX(-90deg); background: linear-gradient(rgba(36, 42, 56, 0.92), rgba(15, 19, 28, 0.92)); }
     }
 
     @keyframes bottomFlip {
       from { transform: rotateX(90deg); background: linear-gradient(rgba(36, 42, 56, 0.92), rgba(15, 19, 28, 0.92)); }
-      to { transform: rotateX(0deg); background: linear-gradient(rgba(36, 42, 56, 0.46), rgba(15, 19, 28, 0.46)); }
+      to { transform: rotateX(0deg); background: linear-gradient(rgba(36, 42, 56, 0.5), rgba(15, 19, 28, 0.5)); }
     }
 
     @media (max-width: 900px) {
-      .tile { width: min(4.4vw, 36px); }
+      .tile { width: min(4.2vw, 34px); }
     }
   </style>
 </head>
 <body>
-  <div class="zoom-wrap">
-    <main class="shell">
-      <section class="title-stack">
-        <div class="solid-box title">Daily Forecast</div>
-        <div class="solid-box columns">Server ID &nbsp;|&nbsp; Multiplier &nbsp;|&nbsp; Category</div>
-      </section>
+  <main class="shell">
+    <section class="title-board">
+      <div class="row" id="titleRow"></div>
+    </section>
 
-      <section class="rows" id="dataRows"></section>
-    </main>
-  </div>
+    <section class="rows">
+      <div class="row header-row" id="headerRow"></div>
+      <div class="row" id="dividerRow"></div>
+      <div class="rows" id="dataRows"></div>
+    </section>
+  </main>
 
   <script>
-    const SERVER_WIDTH = 10;
-    const MULTIPLIER_WIDTH = 8;
-    const CATEGORY_WIDTH = 8;
+    const SERVER_WIDTH = 9;
+    const MULTIPLIER_WIDTH = 10;
+    const TITLE_TEXT = "DAILY FORECAST";
 
     let forecastData = [
-      { server: "2B61B1", multiplier: "1.18x", category: "new" },
-      { server: "DD616C", multiplier: "1.17x", category: "new" },
-      { server: "FB81A4", multiplier: "1.17x", category: "new" },
-      { server: "457091", multiplier: "1.16x", category: "new" },
-      { server: "CBCABF", multiplier: "1.16x", category: "new" },
-      { server: "95CF99", multiplier: "1.13x", category: "new" },
-      { server: "A94F7B", multiplier: "1.09x", category: "new" },
-      { server: "09D872", multiplier: "1.08x", category: "old" },
-      { server: "40660D", multiplier: "1.03x", category: "old" },
-      { server: "03FC99", multiplier: "1.02x", category: "old" },
-      { server: "5358F7", multiplier: "1.01x", category: "old" }
+      { server: "2B61B1", multiplier: "1.18x" },
+      { server: "DD616C", multiplier: "1.17x" },
+      { server: "FB81A4", multiplier: "1.17x" },
+      { server: "457091", multiplier: "1.16x" },
+      { server: "CBCABF", multiplier: "1.16x" },
+      { server: "95CF99", multiplier: "1.13x" },
+      { server: "A94F7B", multiplier: "1.09x" },
+      { server: "09D872", multiplier: "1.08x" },
+      { server: "40660D", multiplier: "1.03x" },
+      { server: "03FC99", multiplier: "1.02x" },
+      { server: "5358F7", multiplier: "1.01x" }
     ];
 
     let lastSnapshot = JSON.stringify(forecastData);
 
     function normalize(text, width) {
       return String(text).toUpperCase().slice(0, width).padEnd(width, " ");
-    }
-
-    function isOld(category) {
-      return String(category || "").toLowerCase() === "old";
     }
 
     function createGlyph(className, char) {
@@ -230,11 +192,10 @@
       return glyph;
     }
 
-    function createTile(char, old = false) {
+    function createTile(char) {
       const tile = document.createElement("div");
       tile.className = "tile";
       if (char === " ") tile.classList.add("space");
-      if (old) tile.classList.add("old");
 
       const glyphTop = createGlyph("glyph-top", char);
       const glyphBottom = createGlyph("glyph-bottom", char);
@@ -260,6 +221,40 @@
       };
     }
 
+    function buildStaticRow(container, text) {
+      [...text].forEach((char) => container.appendChild(createTile(char).tile));
+    }
+
+    function buildHeader() {
+      const headerRow = document.getElementById("headerRow");
+      buildStaticRow(headerRow, normalize("SERVER ID", SERVER_WIDTH));
+
+      const sep = document.createElement("div");
+      sep.className = "separator";
+      sep.textContent = "|";
+      headerRow.appendChild(sep);
+
+      buildStaticRow(headerRow, normalize("MULTIPLIER", MULTIPLIER_WIDTH));
+
+      const dividerRow = document.getElementById("dividerRow");
+      const dividerText = `${"-".repeat(SERVER_WIDTH)}|${"-".repeat(MULTIPLIER_WIDTH)}`;
+      [...dividerText].forEach((char) => {
+        if (char === "|") {
+          const s = document.createElement("div");
+          s.className = "separator";
+          s.textContent = "|";
+          dividerRow.appendChild(s);
+        } else {
+          dividerRow.appendChild(createTile(char).tile);
+        }
+      });
+    }
+
+    function buildTitle() {
+      const titleRow = document.getElementById("titleRow");
+      buildStaticRow(titleRow, normalize(TITLE_TEXT, SERVER_WIDTH + MULTIPLIER_WIDTH + 3));
+    }
+
     const rowTiles = [];
 
     function buildDataRows(data) {
@@ -270,40 +265,27 @@
       data.forEach((entry) => {
         const row = document.createElement("div");
         row.className = "row";
-        const old = isOld(entry.category);
 
         const serverTiles = [];
         [...normalize(entry.server, SERVER_WIDTH)].forEach((char) => {
-          const tileObj = createTile(char, old);
+          const tileObj = createTile(char);
           serverTiles.push(tileObj);
           row.appendChild(tileObj.tile);
         });
 
-        const sep1 = document.createElement("div");
-        sep1.className = "separator";
-        sep1.textContent = "|";
-        row.appendChild(sep1);
+        const sep = document.createElement("div");
+        sep.className = "separator";
+        sep.textContent = "|";
+        row.appendChild(sep);
 
         const multTiles = [];
         [...normalize(entry.multiplier, MULTIPLIER_WIDTH)].forEach((char) => {
-          const tileObj = createTile(char, old);
+          const tileObj = createTile(char);
           multTiles.push(tileObj);
           row.appendChild(tileObj.tile);
         });
 
-        const sep2 = document.createElement("div");
-        sep2.className = "separator";
-        sep2.textContent = "|";
-        row.appendChild(sep2);
-
-        const categoryTiles = [];
-        [...normalize(entry.category, CATEGORY_WIDTH)].forEach((char) => {
-          const tileObj = createTile(char, old);
-          categoryTiles.push(tileObj);
-          row.appendChild(tileObj.tile);
-        });
-
-        rowTiles.push({ serverTiles, multTiles, categoryTiles });
+        rowTiles.push({ serverTiles, multTiles });
         dataRows.appendChild(row);
       });
     }
@@ -312,25 +294,25 @@
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    async function flipOnce(tileObj, targetChar, old) {
+    async function flipOnce(tileObj, targetChar) {
       tileObj.glyphNextTop.textContent = targetChar;
       tileObj.glyphNextBottom.textContent = targetChar;
-      tileObj.tile.classList.toggle("old", old);
       tileObj.tile.classList.add("flipping");
+
       await wait(420);
+
       tileObj.glyphTop.textContent = targetChar;
       tileObj.glyphBottom.textContent = targetChar;
       tileObj.char = targetChar;
       tileObj.tile.classList.toggle("space", targetChar === " ");
-      tileObj.tile.classList.toggle("old", old);
       tileObj.tile.classList.remove("flipping");
     }
 
-    function enqueueFlipTo(tileObj, targetChar, delay = 0, old = false) {
+    function enqueueFlipTo(tileObj, targetChar, delay = 0) {
       tileObj.queue = tileObj.queue.then(async () => {
-        if (tileObj.char === targetChar && tileObj.tile.classList.contains("old") === old) return;
+        if (tileObj.char === targetChar) return;
         await wait(delay);
-        await flipOnce(tileObj, targetChar, old);
+        await flipOnce(tileObj, targetChar);
       });
       return tileObj.queue;
     }
@@ -340,19 +322,13 @@
       data.forEach((entry, rowIndex) => {
         const server = normalize(entry.server, SERVER_WIDTH);
         const multiplier = normalize(entry.multiplier, MULTIPLIER_WIDTH);
-        const category = normalize(entry.category, CATEGORY_WIDTH);
-        const old = isOld(entry.category);
 
         [...server].forEach((char, i) => {
-          tasks.push(enqueueFlipTo(rowTiles[rowIndex].serverTiles[i], char, i * 20, old));
+          tasks.push(enqueueFlipTo(rowTiles[rowIndex].serverTiles[i], char, i * 24));
         });
 
         [...multiplier].forEach((char, i) => {
-          tasks.push(enqueueFlipTo(rowTiles[rowIndex].multTiles[i], char, i * 20 + 75, old));
-        });
-
-        [...category].forEach((char, i) => {
-          tasks.push(enqueueFlipTo(rowTiles[rowIndex].categoryTiles[i], char, i * 20 + 130, old));
+          tasks.push(enqueueFlipTo(rowTiles[rowIndex].multTiles[i], char, i * 24 + 90));
         });
       });
 
@@ -381,7 +357,10 @@
       lastSnapshot = snapshot;
     }
 
+    buildTitle();
+    buildHeader();
     buildDataRows(forecastData);
+
     window.refreshBoard = refreshBoard;
     setInterval(refreshBoard, 30000);
   </script>
