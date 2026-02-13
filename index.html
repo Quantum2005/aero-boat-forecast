@@ -1,108 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Aeronautica Nautical Forecast</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aero Boat Forecast — Split Flap</title>
 <style>
+:root {
+  --wood-dark: #4f301c;
+  --wood-light: #7a4c2e;
+  --board-body: #121316;
+  --board-border: #0a0a0d;
+  --tile: #15171b;
+  --tile-edge: #090a0d;
+  --tile-highlight: #2d3138;
+  --text: #eff2f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-    background: #111;
-    color: #fff;
-    font-family: monospace;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px;
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  font-family: "Inter", "Arial Narrow", Arial, sans-serif;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.2)),
+    repeating-linear-gradient(
+      90deg,
+      var(--wood-dark) 0 14px,
+      var(--wood-light) 14px 26px
+    );
 }
 
-h1 {
-    margin-bottom: 30px;
-    letter-spacing: 3px;
+.board-shell {
+  width: min(1240px, 96vw);
+  background: linear-gradient(#1f2026, #111217);
+  border: 10px solid #0a0b10;
+  border-radius: 6px;
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.65),
+    inset 0 0 40px rgba(255, 255, 255, 0.03);
+  padding: 1.2rem 1rem;
 }
 
-table {
-    border-collapse: collapse;
-    width: 500px;
+.board {
+  display: grid;
+  gap: 0.55rem;
 }
 
-th, td {
-    padding: 15px;
-    text-align: center;
+.row {
+  display: flex;
+  gap: 0.28rem;
 }
 
-th {
-    border-bottom: 2px solid #444;
-    font-size: 18px;
+.tile {
+  position: relative;
+  width: min(3.2vw, 44px);
+  aspect-ratio: 1 / 1.3;
+  border: 1px solid #23262e;
+  border-radius: 3px;
+  background: linear-gradient(#1b1d23, #0f1115);
+  box-shadow:
+    inset 0 -12px 15px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  overflow: hidden;
 }
 
-.flip {
-    position: relative;
-    background: #000;
-    border: 1px solid #333;
-    height: 50px;
-    overflow: hidden;
+.tile::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px solid rgba(240, 245, 255, 0.16);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+  z-index: 3;
 }
 
-.flip span {
-    display: block;
-    animation: flipAnim 0.6s ease-in-out;
-    font-size: 20px;
-    line-height: 50px;
+.half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.35)),
+    var(--tile);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--text);
+  font-size: clamp(20px, 2.5vw, 34px);
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
-@keyframes flipAnim {
-    0%   { transform: rotateX(90deg); opacity: 0; }
-    50%  { transform: rotateX(-20deg); }
-    100% { transform: rotateX(0deg); opacity: 1; }
+.half.top {
+  top: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.half.bottom {
+  bottom: 0;
+  align-items: flex-start;
+  border-top: 1px solid rgba(0, 0, 0, 0.75);
+}
+
+.half.top span {
+  transform: translateY(28%);
+}
+
+.half.bottom span {
+  transform: translateY(-22%);
+}
+
+.tile-space .half {
+  color: transparent;
+}
+
+.flip-top,
+.flip-bottom {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  display: flex;
+  justify-content: center;
+  color: var(--text);
+  font-size: clamp(20px, 2.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.5)), var(--tile);
+  backface-visibility: hidden;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.flip-top {
+  top: 0;
+  align-items: center;
+  transform-origin: bottom;
+}
+
+.flip-top span {
+  transform: translateY(28%);
+}
+
+.flip-bottom {
+  bottom: 0;
+  align-items: flex-start;
+  transform-origin: top;
+  transform: rotateX(90deg);
+}
+
+.flip-bottom span {
+  transform: translateY(-22%);
+}
+
+.tile.flipping .flip-top {
+  animation: flipTop 220ms ease-in forwards;
+}
+
+.tile.flipping .flip-bottom {
+  animation: flipBottom 220ms ease-out 220ms forwards;
+}
+
+@keyframes flipTop {
+  from { transform: rotateX(0); filter: brightness(1); }
+  to { transform: rotateX(-90deg); filter: brightness(0.6); }
+}
+
+@keyframes flipBottom {
+  from { transform: rotateX(90deg); filter: brightness(0.7); }
+  to { transform: rotateX(0); filter: brightness(1); }
+}
+
+@media (max-width: 900px) {
+  .tile {
+    width: min(4vw, 36px);
+  }
 }
 </style>
 </head>
-
 <body>
-
-<h1>DAILY FORECAST</h1>
-
-<table>
-    <thead>
-        <tr>
-            <th>Server ID</th>
-            <th>Multiplier</th>
-        </tr>
-    </thead>
-    <tbody id="forecastTable">
-    </tbody>
-</table>
+  <main class="board-shell" aria-label="Split flap board">
+    <section class="board" id="board"></section>
+  </main>
 
 <script>
-// 👇 MANUALLY EDIT YOUR DATA HERE
-const forecastData = [
-    { server: "2B61B1", multiplier: "1.18x" },
-    { server: "EU-07", multiplier: "1.8x" },
-    { server: "AS-12", multiplier: "3.1x" }
+const ROW_WIDTH = 28;
+const PHRASES = [
+  "BARS   STADIUMS   HOTELS",
+  "AIRPORTS  RETAIL   CAFES",
+  "EXPERIENTIAL MARKETING",
+  "LOBBIES   TRAIN STATIONS",
+  "EDUCATION   CRUISE SHIPS",
+  "RESTAURANTS    OFFICES",
+  "TRANSPORTATION   CASINOS"
 ];
 
-// Render table
-function renderTable() {
-    const table = document.getElementById("forecastTable");
-    table.innerHTML = "";
+const ALPHABET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-";
+const boardElement = document.getElementById("board");
+const tiles = [];
 
-    forecastData.forEach(entry => {
-        const row = document.createElement("tr");
-
-        const serverCell = document.createElement("td");
-        serverCell.innerHTML = `<div class="flip"><span>${entry.server}</span></div>`;
-
-        const multiplierCell = document.createElement("td");
-        multiplierCell.innerHTML = `<div class="flip"><span>${entry.multiplier}</span></div>`;
-
-        row.appendChild(serverCell);
-        row.appendChild(multiplierCell);
-        table.appendChild(row);
-    });
+function normalizeLine(text) {
+  const clean = text.toUpperCase().slice(0, ROW_WIDTH);
+  return clean.padEnd(ROW_WIDTH, " ");
 }
 
-renderTable();
-</script>
+function createTile(char) {
+  const tile = document.createElement("div");
+  tile.className = "tile";
 
+  const top = document.createElement("div");
+  top.className = "half top";
+  top.innerHTML = `<span>${char}</span>`;
+
+  const bottom = document.createElement("div");
+  bottom.className = "half bottom";
+  bottom.innerHTML = `<span>${char}</span>`;
+
+  tile.append(top, bottom);
+
+  if (char === " ") tile.classList.add("tile-space");
+
+  return { tile, top, bottom, char };
+}
+
+function buildBoard(lines) {
+  lines.forEach((lineText) => {
+    const row = document.createElement("div");
+    row.className = "row";
+    const normalized = normalizeLine(lineText);
+    const rowTiles = [];
+
+    [...normalized].forEach((char) => {
+      const tileObj = createTile(char);
+      row.appendChild(tileObj.tile);
+      rowTiles.push(tileObj);
+    });
+
+    tiles.push(rowTiles);
+    boardElement.appendChild(row);
+  });
+}
+
+function nextChar(current, target, progress) {
+  if (progress > 0.72) return target;
+  const currentIndex = Math.max(0, ALPHABET.indexOf(current));
+  return ALPHABET[(currentIndex + 1) % ALPHABET.length];
+}
+
+function flipTile(tileObj, targetChar, delay) {
+  setTimeout(() => {
+    const fromChar = tileObj.char;
+    const flipTop = document.createElement("div");
+    flipTop.className = "flip-top";
+    flipTop.innerHTML = `<span>${fromChar}</span>`;
+
+    const flipBottom = document.createElement("div");
+    flipBottom.className = "flip-bottom";
+    flipBottom.innerHTML = `<span>${targetChar}</span>`;
+
+    tileObj.tile.append(flipTop, flipBottom);
+    tileObj.tile.classList.add("flipping");
+
+    setTimeout(() => {
+      tileObj.top.innerHTML = `<span>${targetChar}</span>`;
+      tileObj.bottom.innerHTML = `<span>${targetChar}</span>`;
+      tileObj.char = targetChar;
+      tileObj.tile.classList.toggle("tile-space", targetChar === " ");
+      tileObj.tile.classList.remove("flipping");
+      flipTop.remove();
+      flipBottom.remove();
+    }, 460);
+  }, delay);
+}
+
+function updateBoard(targetLines) {
+  targetLines.forEach((lineText, rowIndex) => {
+    const normalized = normalizeLine(lineText);
+    [...normalized].forEach((targetChar, colIndex) => {
+      const tileObj = tiles[rowIndex][colIndex];
+      if (tileObj.char === targetChar) return;
+
+      const fromIndex = ALPHABET.indexOf(tileObj.char);
+      const toIndex = ALPHABET.indexOf(targetChar);
+      const distance = (toIndex - fromIndex + ALPHABET.length) % ALPHABET.length;
+      const hops = Math.max(1, distance);
+
+      for (let i = 1; i <= hops; i += 1) {
+        const progress = i / hops;
+        const next = nextChar(tileObj.char, targetChar, progress);
+        const delay = i * 42 + rowIndex * 70 + Math.random() * 20;
+        flipTile(tileObj, next, delay);
+      }
+    });
+  });
+}
+
+buildBoard(PHRASES);
+
+const demoSets = [
+  PHRASES,
+  [
+    "WINDY DOCKS  HIGH TIDE",
+    "HEADWINDS   2.8X LIFT",
+    "EXPERIMENTAL FERRY LANE",
+    "LOW VISIBILITY   ALERT",
+    "EDDIES FORMING EAST BAY",
+    "MOORING STATUS   LIMITED",
+    "TRAVEL WINDOW  06:00 UTC"
+  ]
+];
+
+let demoIndex = 0;
+setInterval(() => {
+  demoIndex = (demoIndex + 1) % demoSets.length;
+  updateBoard(demoSets[demoIndex]);
+}, 7000);
+</script>
 </body>
 </html>
