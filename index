@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Daily Server Forecast</title>
+<title>Aeronautica Nautical Forecast</title>
 
 <style>
 body {
@@ -76,7 +76,7 @@ th {
 <script>
 // 👇 MANUALLY EDIT YOUR DATA HERE
 const forecastData = [
-    { server: "NA-01", multiplier: "2.5x" },
+    { server: "2B61B1", multiplier: "1.18x" },
     { server: "EU-07", multiplier: "1.8x" },
     { server: "AS-12", multiplier: "3.1x" }
 ];
