@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Daily Server Forecast</title>
+
+<style>
+body {
+    background: #111;
+    color: #fff;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+}
+
+h1 {
+    margin-bottom: 30px;
+    letter-spacing: 3px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 500px;
+}
+
+th, td {
+    padding: 15px;
+    text-align: center;
+}
+
+th {
+    border-bottom: 2px solid #444;
+    font-size: 18px;
+}
+
+.flip {
+    position: relative;
+    background: #000;
+    border: 1px solid #333;
+    height: 50px;
+    overflow: hidden;
+}
+
+.flip span {
+    display: block;
+    animation: flipAnim 0.6s ease-in-out;
+    font-size: 20px;
+    line-height: 50px;
+}
+
+@keyframes flipAnim {
+    0%   { transform: rotateX(90deg); opacity: 0; }
+    50%  { transform: rotateX(-20deg); }
+    100% { transform: rotateX(0deg); opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>DAILY FORECAST</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Server ID</th>
+            <th>Multiplier</th>
+        </tr>
+    </thead>
+    <tbody id="forecastTable">
+    </tbody>
+</table>
+
+<script>
+// 👇 MANUALLY EDIT YOUR DATA HERE
+const forecastData = [
+    { server: "NA-01", multiplier: "2.5x" },
+    { server: "EU-07", multiplier: "1.8x" },
+    { server: "AS-12", multiplier: "3.1x" }
+];
+
+// Render table
+function renderTable() {
+    const table = document.getElementById("forecastTable");
+    table.innerHTML = "";
+
+    forecastData.forEach(entry => {
+        const row = document.createElement("tr");
+
+        const serverCell = document.createElement("td");
+        serverCell.innerHTML = `<div class="flip"><span>${entry.server}</span></div>`;
+
+        const multiplierCell = document.createElement("td");
+        multiplierCell.innerHTML = `<div class="flip"><span>${entry.multiplier}</span></div>`;
+
+        row.appendChild(serverCell);
+        row.appendChild(multiplierCell);
+        table.appendChild(row);
+    });
+}
+
+renderTable();
+</script>
+
+</body>
+</html>
